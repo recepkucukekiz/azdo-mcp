@@ -71,7 +71,7 @@ claude mcp add azure-devops --scope user \
   -- npx -y azdo-mcp <your-organization>
 ```
 
-On Windows, start the command with `cmd /c`: `-- cmd /c npx -y azdo-mcp <your-organization>`.
+On Windows, start the command with `cmd /c`: `-- cmd /c npx -y azdo-mcp <your-organization>`. In PowerShell, also write the separator as `'--'` (in quotes): `claude` runs through the `claude.ps1` shim, and PowerShell drops a bare `--` before calling a script, which makes `claude` fail with `unknown option '-y'`.
 
 **Claude Desktop** — *Settings → Developer → Edit Config* and add to `claude_desktop_config.json`:
 
@@ -90,7 +90,7 @@ On Windows, start the command with `cmd /c`: `-- cmd /c npx -y azdo-mcp <your-or
 }
 ```
 
-Until the package is published on npm, use `github:<owner>/azdo-mcp` in place of `azdo-mcp`, or point to a local build: `"command": "node", "args": ["C:/path/to/azdo-mcp/dist/index.js", "<your-organization>"]`.
+Until the package is published on npm, use `github:recepkucukekiz/azdo-mcp` in place of `azdo-mcp`, or point to a local build: `"command": "node", "args": ["C:/path/to/azdo-mcp/dist/index.js", "<your-organization>"]`.
 
 ## Configuration
 
