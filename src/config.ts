@@ -1,4 +1,5 @@
 import { AzureDevOpsError } from "./errors.ts";
+import { plainName } from "./format.ts";
 
 export interface Config {
   /** Organization (or on-premises collection) URL without a trailing slash. */
@@ -30,7 +31,7 @@ export function loadConfig(
   }
   return {
     orgUrl: normalizeOrgUrl(org),
-    defaultProject: env.AZURE_DEVOPS_PROJECT?.trim() || undefined,
+    defaultProject: plainName(env.AZURE_DEVOPS_PROJECT),
     pat: env.AZURE_DEVOPS_PAT?.trim() || undefined,
     readOnly: args.includes("--read-only") || isTrue(env.AZURE_DEVOPS_READ_ONLY),
   };

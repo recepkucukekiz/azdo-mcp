@@ -108,8 +108,8 @@ beforeEach(() => {
   routes = defaultRoutes();
 });
 
-async function connect(readOnly = false): Promise<Client> {
-  const server = createServer(new AzureDevOpsClient(base, patAuth("secret"), "Web App"), readOnly);
+async function connect(readOnly = false, defaultProject = "Web App"): Promise<Client> {
+  const server = createServer(new AzureDevOpsClient(base, patAuth("secret"), defaultProject), readOnly);
   const [serverSide, clientSide] = InMemoryTransport.createLinkedPair();
   await server.connect(serverSide);
   const client = new Client({ name: "test", version: "0.0.0" });
@@ -117,8 +117,8 @@ async function connect(readOnly = false): Promise<Client> {
   return client;
 }
 
-async function call(name: string, args: Record<string, unknown>) {
-  const client = await connect();
+async function call(name: string, args: Record<string, unknown>, defaultProject?: string) {
+  const client = await connect(false, defaultProject);
   try {
     const result = await client.callTool({ name, arguments: args });
     const text = (result.content as { text: string }[])[0]?.text ?? "";
@@ -240,6 +240,21 @@ test("add_pull_request_comment starts a thread on a file line", async () => {
       rightFileEnd: { line: 5, offset: 1 },
     },
   });
+});
+
+test("URL-encoded project names are encoded only once", async () => {
+  routes["GET /Web%20App/_apis/wit/workitemtypes"] = { body: { value: [{ name: "Bug", states: [{ name: "New" }] }] } };
+  routes["GET /Web%20App/_apis/git/pullrequests/7"] = { body: pullRequest7 };
+
+  const fromDefault = await call("list_work_item_types", {}, "Web%20App");
+  assert.equal(fromDefault.isError, false, fromDefault.text);
+  const fromParameter = await call("list_work_item_types", { project: "Web%20App" }, "Other");
+  assert.equal(fromParameter.isError, false, fromParameter.text);
+  const pullRequest = await call("get_pull_request", { id: 7, project: "Web%20App" });
+  assert.equal(pullRequest.isError, false, pullRequest.text);
+
+  assert.ok(requests.every((r) => !r.path.includes("%25")), requests.map((r) => r.path).join(", "));
+  lastRequest("GET", "/Web%20App/_apis/git/pullrequests/7");
 });
 
 test("a sign-in page is reported as an authentication problem", async () => {

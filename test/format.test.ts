@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { normalizeOrgUrl, loadConfig } from "../src/config.ts";
-import { branchRef, compact, htmlToText, identityName, shortRef, textToHtml, wiqlString } from "../src/format.ts";
+import {
+  branchRef,
+  compact,
+  htmlToText,
+  identityName,
+  plainName,
+  shortRef,
+  textToHtml,
+  wiqlString,
+} from "../src/format.ts";
 
 test("htmlToText keeps structure and decodes entities", () => {
   const html =
@@ -42,6 +51,16 @@ test("compact drops empty values", () => {
   assert.deepEqual(compact({ a: 1, b: undefined, c: null, d: "", e: [], f: 0, g: false }), { a: 1, f: 0, g: false });
 });
 
+test("plainName undoes URL encoding and keeps plain names", () => {
+  assert.equal(plainName("Web%20App"), "Web App");
+  assert.equal(plainName(" Web App "), "Web App");
+  assert.equal(plainName("M%C3%BC%C5%9Fteri Portal%C4%B1"), "Müşteri Portalı");
+  assert.equal(plainName("100% done"), "100% done");
+  assert.equal(plainName("%E0%A4%A"), "%E0%A4%A");
+  assert.equal(plainName("  "), undefined);
+  assert.equal(plainName(undefined), undefined);
+});
+
 test("wiqlString escapes quotes", () => {
   assert.equal(wiqlString("O'Brien"), "'O''Brien'");
 });
@@ -65,5 +84,6 @@ test("loadConfig reads arguments before environment", () => {
     readOnly: true,
   });
   assert.equal(loadConfig({ AZURE_DEVOPS_ORG: "o", AZURE_DEVOPS_READ_ONLY: "false" }, []).readOnly, false);
+  assert.equal(loadConfig({ AZURE_DEVOPS_ORG: "o", AZURE_DEVOPS_PROJECT: "Web%20App" }, []).defaultProject, "Web App");
   assert.throws(() => loadConfig({}, []), /No organization/);
 });

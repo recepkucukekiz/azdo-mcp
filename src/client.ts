@@ -1,5 +1,6 @@
 import type { AuthProvider } from "./auth.ts";
 import { AzureDevOpsError, errorMessage } from "./errors.ts";
+import { plainName } from "./format.ts";
 
 const DEFAULT_API_VERSION = "7.1";
 const TIMEOUT_MS = 30_000;
@@ -33,12 +34,12 @@ export class AzureDevOpsClient {
   constructor(orgUrl: string, auth: AuthProvider, defaultProject?: string) {
     this.orgUrl = orgUrl;
     this.auth = auth;
-    this.defaultProject = defaultProject;
+    this.defaultProject = plainName(defaultProject);
   }
 
   /** The given project, or the configured default; throws when there is neither. */
   project(project?: string): string {
-    const resolved = project?.trim() || this.defaultProject;
+    const resolved = this.optionalProject(project);
     if (!resolved) {
       throw new AzureDevOpsError("No project given. Pass `project` or set AZURE_DEVOPS_PROJECT.");
     }
@@ -47,7 +48,7 @@ export class AzureDevOpsClient {
 
   /** The given project or the configured default, if any. */
   optionalProject(project?: string): string | undefined {
-    return project?.trim() || this.defaultProject;
+    return plainName(project) ?? this.defaultProject;
   }
 
   get<T>(path: string, options?: RequestOptions): Promise<T> {

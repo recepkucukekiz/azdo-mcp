@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { type AzureDevOpsClient, seg } from "../client.ts";
 import { AzureDevOpsError } from "../errors.ts";
-import { branchRef, compact, identityName, shortRef, truncate } from "../format.ts";
+import { branchRef, compact, identityName, plainName, shortRef, truncate } from "../format.ts";
 import { projectParam, READ, run, type ToolContext, WRITE } from "./common.ts";
 import { fetchSummaries } from "./workItems.ts";
 
@@ -122,7 +122,8 @@ function summarizePullRequest(pr: PullRequest, orgUrl: string): Record<string, u
 
 function getPullRequest(client: AzureDevOpsClient, id: number, project?: string): Promise<PullRequest> {
   // Pull request IDs are unique in the organization, so the project is only needed to narrow the lookup.
-  return client.get<PullRequest>(`${project ? `/${seg(project)}` : ""}/_apis/git/pullrequests/${id}`);
+  const scope = plainName(project);
+  return client.get<PullRequest>(`${scope ? `/${seg(scope)}` : ""}/_apis/git/pullrequests/${id}`);
 }
 
 /** Base path of a pull request's sub-resources (threads, iterations, work items). */

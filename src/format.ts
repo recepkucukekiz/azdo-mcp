@@ -89,6 +89,18 @@ export function compact<T extends Record<string, unknown>>(value: T): Partial<T>
   return out as Partial<T>;
 }
 
+/** Trims a project name and undoes URL encoding, so "Web%20App" and "Web App" both work. */
+export function plainName(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (!/%[0-9a-f]{2}/i.test(trimmed)) return trimmed;
+  try {
+    return decodeURIComponent(trimmed).trim() || undefined;
+  } catch {
+    return trimmed;
+  }
+}
+
 /** Quotes a value for use in a WIQL query. */
 export function wiqlString(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
